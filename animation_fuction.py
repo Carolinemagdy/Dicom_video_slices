@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import matplotlib.animation as ani
 
-path="D:\image modalities\project\Head"
+path=".\Head"
 
 #returns a list containing the names of the images in the directory given by path. The list is in arbitrary order
 images=os.listdir(path)
