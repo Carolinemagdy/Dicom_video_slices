@@ -11,6 +11,7 @@ from PyQt5.uic import loadUiType
 import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.lines as lines
 matplotlib.use('Qt5Agg')
 
 ui,_ = loadUiType(os.path.join(os.path.dirname(__file__),'dicom_viewer_ui.ui'))
@@ -82,7 +83,15 @@ class Dicom_Viewer_App(QMainWindow , ui):
         #Axial Canvas
         self.axial_fig,self.axial_axes = self.canvas_setup(397,305,self.axial_view)
         self.axial_axes.imshow(self.volume3d[:,:,0], cmap='gray')
-        _ = self.axial_fig.canvas.mpl_connect('button_press_event', self.onclick_axial)
+        # _ = self.axial_fig.canvas.mpl_connect('button_press_event', self.onclick_axial)
+        #Adding Lines
+        self.h_line = lines.Line2D((0,512),(256,256),picker=5)
+        self.v_line = lines.Line2D((256,256),(0,512),picker=5)
+        self.axial_axes.add_line(self.h_line)
+        self.axial_axes.add_line(self.v_line)
+        self.update(self.axial_fig)
+
+        sid = self.axial_fig.canvas.mpl_connect('pick_event', self.clickonline)
         
         #Sagital Canvas
         self.sagital_fig,self.sagital_axes = self.canvas_setup(397,305,self.sagital_view)
@@ -92,6 +101,42 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.coronal_fig,self.coronal_axes = self.canvas_setup(397,305,self.coronal_view)
         self.coronal_axes.imshow(self.volume3d[0,:,:], cmap='gray')
         
+    # pick line when I select it 
+    def clickonline(self, event):
+        self.clicked_line = event.artist
+        # if event.artist == self.h_line:
+            # print("line selected ", event.artist)
+        self.follower = self.axial_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
+        self.releaser = self.axial_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
+
+    # The selected line must follow the mouse
+    def followmouse(self, event):
+        if self.clicked_line == self.h_line:
+            self.h_line.set_ydata([event.ydata, event.ydata])
+        else:
+            self.v_line.set_xdata([event.xdata, event.xdata])
+
+        self.update(self.axial_fig)
+
+
+        
+        
+    def releaseonclick(self, event):
+        self.axial_y = round(self.h_line.get_ydata()[0])
+        self.axial_x = round(self.v_line.get_xdata()[0])
+
+        print(self.axial_x, self.axial_y)
+        #Update Sagital
+        self.sagital_axes.imshow(self.volume3d[:,self.axial_y,:], cmap='gray')
+        self.update(self.sagital_fig)
+        
+
+        #Update Coronal
+        self.coronal_axes.imshow(self.volume3d[self.axial_x,:,:], cmap='gray')
+        self.update(self.coronal_fig)
+        
+        self.axial_fig.canvas.mpl_disconnect(self.releaser)
+        self.axial_fig.canvas.mpl_disconnect(self.follower) 
         
     def canvas_setup(self,fig_width,fig_height,view,bool=True):
         '''Setting up a canvas to view an image in its graphics view'''
@@ -110,6 +155,9 @@ class Dicom_Viewer_App(QMainWindow , ui):
             axes.get_yaxis().set_visible(True)
         return figure,axes
 
+    def update(self,axis):
+        axis.canvas.draw_idle()
+        axis.canvas.flush_events()
 
     def onclick_axial(self,event):
         self.axial_x, self.axial_y = round(event.xdata), round(event.ydata)
