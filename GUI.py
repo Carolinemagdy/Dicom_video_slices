@@ -82,13 +82,17 @@ class Dicom_Viewer_App(QMainWindow , ui):
 
         #Axial Canvas
         self.axial_fig,self.axial_axes = self.canvas_setup(397,305,self.axial_view)
-        self.axial_axes.imshow(self.volume3d[:,:,0], cmap='gray')
+        self.axial_axes.imshow(self.volume3d[:,:,120], cmap='gray')
         # _ = self.axial_fig.canvas.mpl_connect('button_press_event', self.onclick_axial)
         #Adding Lines
         self.h_line = lines.Line2D((0,512),(256,256),picker=5)
         self.v_line = lines.Line2D((256,256),(0,512),picker=5)
-        self.axial_axes.add_line(self.h_line)
+        self.d_line = lines.Line2D((0,512),(512,0),picker=5)
+
+        self.axial_axes.add_line(self.h_line) 
         self.axial_axes.add_line(self.v_line)
+        self.axial_axes.add_line(self.d_line)
+
         self.update(self.axial_fig)
 
         sid = self.axial_fig.canvas.mpl_connect('pick_event', self.clickonline)
@@ -105,7 +109,6 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def clickonline(self, event):
         self.clicked_line = event.artist
         # if event.artist == self.h_line:
-            # print("line selected ", event.artist)
         self.follower = self.axial_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
         self.releaser = self.axial_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
 
@@ -113,9 +116,13 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def followmouse(self, event):
         if self.clicked_line == self.h_line:
             self.h_line.set_ydata([event.ydata, event.ydata])
-        else:
+        elif self.clicked_line == self.v_line:
             self.v_line.set_xdata([event.xdata, event.xdata])
-
+        else :
+            y=(event.xdata) + (event.ydata)
+            x=(event.xdata) + (event.ydata)
+            self.d_line.set_xdata([0, x])
+            self.d_line.set_ydata([y, 0])
         self.update(self.axial_fig)
 
 
@@ -127,13 +134,13 @@ class Dicom_Viewer_App(QMainWindow , ui):
 
         print(self.axial_x, self.axial_y)
         #Update Sagital
-        self.sagital_axes.imshow(self.volume3d[:,self.axial_y,:], cmap='gray')
-        self.update(self.sagital_fig)
-        
-
+        if self.clicked_line == self.v_line:
+            self.sagital_axes.imshow(self.volume3d[:,self.axial_x,:], cmap='gray')
+            self.update(self.sagital_fig)
         #Update Coronal
-        self.coronal_axes.imshow(self.volume3d[self.axial_x,:,:], cmap='gray')
-        self.update(self.coronal_fig)
+        else:
+            self.coronal_axes.imshow(self.volume3d[self.axial_y,:,:], cmap='gray')
+            self.update(self.coronal_fig)
         
         self.axial_fig.canvas.mpl_disconnect(self.releaser)
         self.axial_fig.canvas.mpl_disconnect(self.follower) 
