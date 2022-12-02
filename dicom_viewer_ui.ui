@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Image Reader</string>
+   <string>Dicom Viewer</string>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color:rgb(251, 243, 255)</string>
@@ -57,7 +57,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="zoom_button_5">
+   <widget class="QPushButton" name="browse_button_2">
     <property name="enabled">
      <bool>true</bool>
     </property>
@@ -81,7 +81,7 @@ background-color: rgb(255, 107, 88);</string>
      <string>Choose another image</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="equalize_button">
+   <widget class="QPushButton" name="reset_button">
     <property name="enabled">
      <bool>true</bool>
     </property>
@@ -102,7 +102,7 @@ color: rgb(255, 255, 255);
 background-color: rgb(33, 215, 255);</string>
     </property>
     <property name="text">
-     <string>Equalize</string>
+     <string>Reset</string>
     </property>
    </widget>
    <widget class="QWidget" name="horizontalLayoutWidget_3">
