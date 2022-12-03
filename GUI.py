@@ -90,17 +90,23 @@ class Dicom_Viewer_App(QMainWindow , ui):
         
         #Sagital Canvas
         self.sagital_fig,self.sagital_axes = self.canvas_setup(397,305,self.sagital_view)
-        self.sagital_axes.imshow(self.volume3d[:,256,:], cmap='gray')
+        rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,256,:])
+        self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
 
         #Coronal Canvas
         self.coronal_fig,self.coronal_axes = self.canvas_setup(397,305,self.coronal_view)
-        self.coronal_axes.imshow(self.volume3d[256,:,:], cmap='gray')
-        
+        rotated_coronal_matrix = self.rotate_matrix(self.volume3d[256,:,:])
+        self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
+
+    def rotate_matrix(self,matrix):
+        return [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0])-1,-1,-1)]
+    
     # pick line when I select it 
     def clickonline(self, event):
         '''Picks line on canvas'''
         self.clicked_line = event.artist
-        # if event.artist == self.h_line:
+        if self.clicked_line == self.d_line:
+            self.pivot_xdata, self.pivot_ydata = event.mouseevent.xdata, event.mouseevent.ydata
         self.follower = self.axial_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
         self.releaser = self.axial_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
 
@@ -116,6 +122,17 @@ class Dicom_Viewer_App(QMainWindow , ui):
             x=(event.xdata) + (event.ydata)
             self.d_line.set_xdata([0, x])
             self.d_line.set_ydata([y, 0])
+            # y=event.ydata
+            # x=event.xdata
+            # xdata,ydata = self.d_line.get_data()
+            # self.d_line.set_xdata([self.pivot_xdata, x])
+            # self.d_line.set_ydata([self.pivot_ydata,y])
+            # from scipy.stats import linregress
+            # intercept = linregress(xdata, ydata).intercept
+            # slope = linregress(xdata, ydata).slope
+            # print(slope,intercept)
+            # self.d_line.set_xdata([0,self.pivot_xdata, x])
+            # self.d_line.set_ydata([intercept,self.pivot_ydata,y])
         self.update(self.axial_fig)
 
 
@@ -129,11 +146,13 @@ class Dicom_Viewer_App(QMainWindow , ui):
 
         #Update Sagital
         if self.clicked_line == self.v_line:
-            self.sagital_axes.imshow(self.volume3d[:,self.axial_x,:], cmap='gray')
+            rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,self.axial_x,:])
+            self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
             self.update(self.sagital_fig)
         #Update Coronal
         else:
-            self.coronal_axes.imshow(self.volume3d[self.axial_y,:,:], cmap='gray')
+            rotated_coronal_matrix = self.rotate_matrix(self.volume3d[self.axial_y,:,:])
+            self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
             self.update(self.coronal_fig)
         
         self.axial_fig.canvas.mpl_disconnect(self.releaser)
@@ -172,10 +191,13 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.update(self.axial_fig)
         
         #Reset Sagital
-        self.sagital_axes.imshow(self.volume3d[:,256,:], cmap='gray')
+        
+        rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,256,:])
+        self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')        
         self.update(self.sagital_fig)
         #Reset Coronal
-        self.coronal_axes.imshow(self.volume3d[256,:,:], cmap='gray')
+        rotated_coronal_matrix = self.rotate_matrix(self.volume3d[256,:,:])
+        self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
         self.update(self.coronal_fig)
 
     # def onclick_axial(self,event):
