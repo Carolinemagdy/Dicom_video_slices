@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from math import dist
 import os 
 import sys
 import pydicom as dicom
@@ -78,11 +79,11 @@ class Dicom_Viewer_App(QMainWindow , ui):
         #Adding Lines to axial plane
         self.h_line_axial = lines.Line2D((0,512),(256,256),picker=5)
         self.v_line_axial = lines.Line2D((256,256),(0,512),picker=5)
-        self.d_line_axial = lines.Line2D((0,512),(512,0),picker=5)
+        self.d_line = lines.Line2D((0,512),(0,512),picker=5)
 
         self.axial_axes.add_line(self.h_line_axial) 
         self.axial_axes.add_line(self.v_line_axial)
-        self.axial_axes.add_line(self.d_line_axial)
+        self.axial_axes.add_line(self.d_line)
 
         self.update(self.axial_fig)
 
@@ -127,13 +128,23 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def clickonline(self, event):
         '''Picks line on canvas'''
         self.clicked_line = event.artist
+        if event.artist == self.d_line:
+            self.flag=0
+            self.first_point=self.d_line.get_xdata()[0] , self.d_line.get_ydata()[0]
+            self.second_point=self.d_line.get_xdata()[1] , self.d_line.get_ydata()[1]
+            mouse_event=event.mouseevent
+            if dist((mouse_event.xdata,mouse_event.ydata),(self.first_point)) <50: 
+                self.flag=1
+            elif dist((mouse_event.xdata,mouse_event.ydata),(self.second_point)) <50: 
+                self.flag=2
+
         if self.clicked_line == self.v_line_sagital or self.clicked_line == self.h_line_sagital:
             self.follower_sagital = self.sagital_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
             self.releaser_sagital = self.sagital_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
         elif self.clicked_line == self.v_line_coronal or self.clicked_line == self.h_line_coronal:
             self.follower_coronal = self.coronal_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
             self.releaser_coronal = self.coronal_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
-        elif self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial:
+        elif self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial or self.clicked_line == self.d_line:
             self.follower = self.axial_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
             self.releaser = self.axial_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
 
@@ -142,8 +153,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def followmouse(self, event):
         '''Update lines as mouse moves'''
         if event.ydata == None or event.xdata ==None:
-            return
-        
+            return        
         if self.clicked_line == self.h_line_axial:
             self.h_line_axial.set_ydata([event.ydata, event.ydata])
             self.v_line_sagital.set_xdata([event.ydata, event.ydata])
@@ -151,7 +161,6 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
-            self.update(self.axial_fig)
             
         elif self.clicked_line == self.v_line_axial:
             self.v_line_axial.set_xdata([event.xdata, event.xdata])
@@ -161,16 +170,15 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
-            self.update(self.axial_fig)
+
         elif self.clicked_line == self.h_line_coronal:
             self.h_line_coronal.set_ydata([event.ydata, event.ydata])
 
             self.h_line_sagital.set_ydata([event.ydata, event.ydata])
-            self.axial_axes.imshow(self.volume3d[:,:,234-round(event.ydata)], cmap='gray')
+            self.axial_axes.imshow(self.volume3d[:,:,234-round(event.ydata)], cmap='gray') 
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
-            self.update(self.axial_fig)
-            
+           
         elif self.clicked_line == self.v_line_coronal:
             self.v_line_coronal.set_xdata([event.xdata, event.xdata])
             
@@ -179,8 +187,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
-            self.update(self.axial_fig)
-            
+
         elif self.clicked_line == self.h_line_sagital:
             self.h_line_sagital.set_ydata([event.ydata, event.ydata])
            
@@ -188,7 +195,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.axial_axes.imshow(self.volume3d[:,:,234-round(event.ydata)], cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
-            self.update(self.axial_fig)
+
         elif self.clicked_line == self.v_line_sagital:
             self.v_line_sagital.set_xdata([event.xdata, event.xdata])
             self.h_line_axial.set_ydata([event.xdata, event.xdata])
@@ -196,12 +203,48 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
-            self.update(self.axial_fig)
-        elif self.clicked_line == self.d_line_axial : 
-            y=(event.xdata) + (event.ydata)
-            x=(event.xdata) + (event.ydata)
-            self.d_line_axial.set_xdata([0, x])
-            self.d_line_axial.set_ydata([y, 0])
+    
+        if self.clicked_line == self.d_line : 
+            if self.flag==1 and event.xdata != self.second_point[0] and event.ydata != self.second_point[1]:
+                slope = (self.second_point[1] - event.ydata )/(self.second_point[0]-event.xdata)                    
+                        
+            elif self.flag==2 and event.xdata != self.first_point[0] and event.ydata != self.first_point[1]:
+                slope = (self.first_point[1] - event.ydata )/(self.first_point[0]-event.xdata)
+                
+            elif self.flag==0:
+                slope = (self.d_line.get_ydata()[1] -self.d_line.get_ydata()[0] ) / (self.d_line.get_xdata()[1] -self.d_line.get_xdata()[0] )
+            y1=512 
+            x1=((y1 -(event.ydata))/slope) + (event.xdata)
+            if x1 <0 or x1> 512 :
+                x1=0
+                y1=(-1*slope*event.xdata) + (event.ydata)
+                if y1 <0 or y1> 512:
+                    y1=0
+                    x1= (-1 * (event.ydata)/slope) +(event.xdata)
+                    x2=512
+                    y2=(slope*(512-event.xdata))+ event.ydata
+                else:
+                    x2=512
+                    y2=(slope*(512-event.xdata))+ event.ydata
+                    if y2 <0 or y2> 512:
+                        y2=0
+                        x2= (-1 * (event.ydata)/slope) +(event.xdata)
+            else:
+                x2=0
+                y2=(-1*slope*event.xdata) + (event.ydata)
+                if y2 <0 or y2> 512:
+                    y2=0
+                    x2= (-1 * (event.ydata)/slope) +(event.xdata)
+                    if x2 <0 or x2> 512:
+                        x2=512
+                        y2=(slope*(512-event.xdata))+ event.ydata
+            if x1>x2:     
+                self.d_line.set_xdata([x2, x1])
+                self.d_line.set_ydata([y2, y1])
+            elif x1<x2:
+                self.d_line.set_xdata([x1, x2])
+                self.d_line.set_ydata([y1, y2])
+        self.update(self.axial_fig)
             
 
 
@@ -210,7 +253,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def releaseonclick(self, event):
         '''Update Slices according to position of the lines'''
         
-        if self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial:
+        if self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial or self.clicked_line == self.d_line:
             self.axial_y = round(self.h_line_axial.get_ydata()[0])
             self.axial_x = round(self.v_line_axial.get_xdata()[0])
 
@@ -292,8 +335,8 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.v_line_axial.set_xdata([256, 256])
         self.v_line_coronal.set_xdata([256, 256])
         self.v_line_sagital.set_xdata([256, 256])
-        self.d_line_axial.set_xdata([0, 512])
-        self.d_line_axial.set_ydata([512, 0])
+        self.d_line.set_xdata([0, 512])
+        self.d_line.set_ydata([0, 512])
         self.update(self.axial_fig)
         self.update(self.sagital_fig)
         self.update(self.coronal_fig)
