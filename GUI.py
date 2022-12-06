@@ -39,7 +39,6 @@ class Dicom_Viewer_App(QMainWindow , ui):
         '''Browse to get Dicom Folder'''
         #Getting folder path
         self.dicom_path = QFileDialog.getExistingDirectory(self,"Select Dicom Folder",directory='.')
-        print(self.dicom_path)
         self.browse_bar.setText(self.dicom_path)
         #check if folder was selected
         if self.dicom_path !='':
@@ -101,7 +100,6 @@ class Dicom_Viewer_App(QMainWindow , ui):
 
         self.sagital_axes.add_line(self.h_line_sagital) 
         self.sagital_axes.add_line(self.v_line_sagital)
-        print(self.volume3d.shape)
         self.update(self.sagital_fig)
 
         _ = self.sagital_fig.canvas.mpl_connect('pick_event', self.clickonline)
@@ -204,26 +202,14 @@ class Dicom_Viewer_App(QMainWindow , ui):
             x=(event.xdata) + (event.ydata)
             self.d_line_axial.set_xdata([0, x])
             self.d_line_axial.set_ydata([y, 0])
-            # y=event.ydata
-            # x=event.xdata
-            # xdata,ydata = self.d_line_axial.get_data()
-            # self.d_line_axial.set_xdata([self.pivot_xdata, x])
-            # self.d_line_axial.set_ydata([self.pivot_ydata,y])
-            # from scipy.stats import linregress
-            # intercept = linregress(xdata, ydata).intercept
-            # slope = linregress(xdata, ydata).slope
-            # print(slope,intercept)
-            # self.d_line_axial.set_xdata([0,self.pivot_xdata, x])
-            # self.d_line_axial.set_ydata([intercept,self.pivot_ydata,y])
+            
 
 
         
         
     def releaseonclick(self, event):
         '''Update Slices according to position of the lines'''
-        print('yyyyyyyyyyyyyyyy')
-        print(self.clicked_line)
-        print(self.v_line_sagital)
+        
         if self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial:
             self.axial_y = round(self.h_line_axial.get_ydata()[0])
             self.axial_x = round(self.v_line_axial.get_xdata()[0])
