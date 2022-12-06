@@ -73,16 +73,17 @@ class Dicom_Viewer_App(QMainWindow , ui):
 
         #Axial Canvas
         self.axial_fig,self.axial_axes = self.canvas_setup(397,305,self.axial_view)
-        self.axial_axes.imshow(self.volume3d[:,:,0], cmap='gray')
+        self.axial_axes.imshow(self.volume3d[:,:,117], cmap='gray')
         # _ = self.axial_fig.canvas.mpl_connect('button_press_event', self.onclick_axial)
-        #Adding Lines
-        self.h_line = lines.Line2D((0,512),(256,256),picker=5)
-        self.v_line = lines.Line2D((256,256),(0,512),picker=5)
-        self.d_line = lines.Line2D((0,512),(512,0),picker=5)
 
-        self.axial_axes.add_line(self.h_line) 
-        self.axial_axes.add_line(self.v_line)
-        self.axial_axes.add_line(self.d_line)
+        #Adding Lines to axial plane
+        self.h_line_axial = lines.Line2D((0,512),(256,256),picker=5)
+        self.v_line_axial = lines.Line2D((256,256),(0,512),picker=5)
+        self.d_line_axial = lines.Line2D((0,512),(512,0),picker=5)
+
+        self.axial_axes.add_line(self.h_line_axial) 
+        self.axial_axes.add_line(self.v_line_axial)
+        self.axial_axes.add_line(self.d_line_axial)
 
         self.update(self.axial_fig)
 
@@ -93,10 +94,33 @@ class Dicom_Viewer_App(QMainWindow , ui):
         rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,256,:])
         self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
 
+
+        #Adding Lines to sagital plane
+        self.h_line_sagital = lines.Line2D((0,512),(128,128),picker=5)
+        self.v_line_sagital = lines.Line2D((256,256),(0,512),picker=5)
+
+        self.sagital_axes.add_line(self.h_line_sagital) 
+        self.sagital_axes.add_line(self.v_line_sagital)
+        print(self.volume3d.shape)
+        self.update(self.sagital_fig)
+
+        _ = self.sagital_fig.canvas.mpl_connect('pick_event', self.clickonline)
+
         #Coronal Canvas
         self.coronal_fig,self.coronal_axes = self.canvas_setup(397,305,self.coronal_view)
         rotated_coronal_matrix = self.rotate_matrix(self.volume3d[256,:,:])
         self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
+
+        #Adding Lines to coronal plane
+        self.h_line_coronal = lines.Line2D((0,512),(128,128),picker=5)
+        self.v_line_coronal = lines.Line2D((256,256),(0,512),picker=5)
+
+        self.coronal_axes.add_line(self.h_line_coronal) 
+        self.coronal_axes.add_line(self.v_line_coronal)
+
+        self.update(self.coronal_fig)
+
+        _ = self.coronal_fig.canvas.mpl_connect('pick_event', self.clickonline)
 
     def rotate_matrix(self,matrix):
         return [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0])-1,-1,-1)]
@@ -105,59 +129,151 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def clickonline(self, event):
         '''Picks line on canvas'''
         self.clicked_line = event.artist
-        if self.clicked_line == self.d_line:
-            self.pivot_xdata, self.pivot_ydata = event.mouseevent.xdata, event.mouseevent.ydata
-        self.follower = self.axial_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
-        self.releaser = self.axial_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
+        if self.clicked_line == self.v_line_sagital or self.clicked_line == self.h_line_sagital:
+            self.follower_sagital = self.sagital_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
+            self.releaser_sagital = self.sagital_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
+        elif self.clicked_line == self.v_line_coronal or self.clicked_line == self.h_line_coronal:
+            self.follower_coronal = self.coronal_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
+            self.releaser_coronal = self.coronal_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
+        elif self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial:
+            self.follower = self.axial_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
+            self.releaser = self.axial_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
+
 
     # The selected line must follow the mouse
     def followmouse(self, event):
         '''Update lines as mouse moves'''
-        if self.clicked_line == self.h_line:
-            self.h_line.set_ydata([event.ydata, event.ydata])
-        elif self.clicked_line == self.v_line:
-            self.v_line.set_xdata([event.xdata, event.xdata])
-        else :
+        if event.ydata == None or event.xdata ==None:
+            return
+        
+        if self.clicked_line == self.h_line_axial:
+            self.h_line_axial.set_ydata([event.ydata, event.ydata])
+            self.v_line_sagital.set_xdata([event.ydata, event.ydata])
+            rotated_coronal_matrix = self.rotate_matrix(self.volume3d[round(event.ydata),:,:])
+            self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
+            self.update(self.sagital_fig)
+            self.update(self.coronal_fig)
+            self.update(self.axial_fig)
+            
+        elif self.clicked_line == self.v_line_axial:
+            self.v_line_axial.set_xdata([event.xdata, event.xdata])
+            self.v_line_coronal.set_xdata([event.xdata, event.xdata])
+            
+            rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,round(event.xdata),:])
+            self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
+            self.update(self.sagital_fig)
+            self.update(self.coronal_fig)
+            self.update(self.axial_fig)
+        elif self.clicked_line == self.h_line_coronal:
+            self.h_line_coronal.set_ydata([event.ydata, event.ydata])
+
+            self.h_line_sagital.set_ydata([event.ydata, event.ydata])
+            self.axial_axes.imshow(self.volume3d[:,:,234-round(event.ydata)], cmap='gray')
+            self.update(self.sagital_fig)
+            self.update(self.coronal_fig)
+            self.update(self.axial_fig)
+            
+        elif self.clicked_line == self.v_line_coronal:
+            self.v_line_coronal.set_xdata([event.xdata, event.xdata])
+            
+            self.v_line_axial.set_xdata([event.xdata, event.xdata])
+            rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,round(event.xdata),:])
+            self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
+            self.update(self.sagital_fig)
+            self.update(self.coronal_fig)
+            self.update(self.axial_fig)
+            
+        elif self.clicked_line == self.h_line_sagital:
+            self.h_line_sagital.set_ydata([event.ydata, event.ydata])
+           
+            self.h_line_coronal.set_ydata([event.ydata, event.ydata])
+            self.axial_axes.imshow(self.volume3d[:,:,234-round(event.ydata)], cmap='gray')
+            self.update(self.sagital_fig)
+            self.update(self.coronal_fig)
+            self.update(self.axial_fig)
+        elif self.clicked_line == self.v_line_sagital:
+            self.v_line_sagital.set_xdata([event.xdata, event.xdata])
+            self.h_line_axial.set_ydata([event.xdata, event.xdata])
+            rotated_coronal_matrix = self.rotate_matrix(self.volume3d[round(event.xdata),:,:])
+            self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
+            self.update(self.sagital_fig)
+            self.update(self.coronal_fig)
+            self.update(self.axial_fig)
+        elif self.clicked_line == self.d_line_axial : 
             y=(event.xdata) + (event.ydata)
             x=(event.xdata) + (event.ydata)
-            self.d_line.set_xdata([0, x])
-            self.d_line.set_ydata([y, 0])
+            self.d_line_axial.set_xdata([0, x])
+            self.d_line_axial.set_ydata([y, 0])
             # y=event.ydata
             # x=event.xdata
-            # xdata,ydata = self.d_line.get_data()
-            # self.d_line.set_xdata([self.pivot_xdata, x])
-            # self.d_line.set_ydata([self.pivot_ydata,y])
+            # xdata,ydata = self.d_line_axial.get_data()
+            # self.d_line_axial.set_xdata([self.pivot_xdata, x])
+            # self.d_line_axial.set_ydata([self.pivot_ydata,y])
             # from scipy.stats import linregress
             # intercept = linregress(xdata, ydata).intercept
             # slope = linregress(xdata, ydata).slope
             # print(slope,intercept)
-            # self.d_line.set_xdata([0,self.pivot_xdata, x])
-            # self.d_line.set_ydata([intercept,self.pivot_ydata,y])
-        self.update(self.axial_fig)
+            # self.d_line_axial.set_xdata([0,self.pivot_xdata, x])
+            # self.d_line_axial.set_ydata([intercept,self.pivot_ydata,y])
 
 
         
         
     def releaseonclick(self, event):
         '''Update Slices according to position of the lines'''
-        
-        self.axial_y = round(self.h_line.get_ydata()[0])
-        self.axial_x = round(self.v_line.get_xdata()[0])
+        print('yyyyyyyyyyyyyyyy')
+        print(self.clicked_line)
+        print(self.v_line_sagital)
+        if self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial:
+            self.axial_y = round(self.h_line_axial.get_ydata()[0])
+            self.axial_x = round(self.v_line_axial.get_xdata()[0])
 
-        #Update Sagital
-        if self.clicked_line == self.v_line:
-            rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,self.axial_x,:])
-            self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
-            self.update(self.sagital_fig)
-        #Update Coronal
-        else:
-            rotated_coronal_matrix = self.rotate_matrix(self.volume3d[self.axial_y,:,:])
-            self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
-            self.update(self.coronal_fig)
-        
-        self.axial_fig.canvas.mpl_disconnect(self.releaser)
-        self.axial_fig.canvas.mpl_disconnect(self.follower) 
-        
+            #Update Sagital
+            if self.clicked_line == self.v_line_axial:
+                rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,self.axial_x,:])
+                self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
+                self.update(self.sagital_fig)
+            #Update Coronal
+            else:
+                rotated_coronal_matrix = self.rotate_matrix(self.volume3d[self.axial_y,:,:])
+                self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
+                self.update(self.coronal_fig)
+            
+            self.axial_fig.canvas.mpl_disconnect(self.releaser)
+            self.axial_fig.canvas.mpl_disconnect(self.follower)
+
+        elif self.clicked_line == self.v_line_sagital or self.clicked_line == self.h_line_sagital:
+            self.sagital_y = round(self.h_line_sagital.get_ydata()[0])
+            self.sagital_x = round(self.v_line_sagital.get_xdata()[0])
+            #Update Axial
+            if self.clicked_line == self.h_line_sagital:
+                self.axial_axes.imshow(self.volume3d[:,:,234-self.sagital_y], cmap='gray')
+                self.update(self.axial_fig)
+            #Update Coronal
+            elif self.clicked_line == self.v_line_sagital:
+                rotated_coronal_matrix = self.rotate_matrix(self.volume3d[self.sagital_x,:,:])
+                self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
+                self.update(self.coronal_fig)
+            
+            self.sagital_fig.canvas.mpl_disconnect(self.releaser_sagital)
+            self.sagital_fig.canvas.mpl_disconnect(self.follower_sagital)
+
+        elif self.clicked_line == self.v_line_coronal or self.clicked_line == self.h_line_coronal:
+            self.coronal_y = round(self.h_line_coronal.get_ydata()[0])
+            self.coronal_x = round(self.v_line_coronal.get_xdata()[0])
+            #Update Axial
+            if self.clicked_line == self.h_line_coronal:
+                self.axial_axes.imshow(self.volume3d[:,:,234-self.coronal_y], cmap='gray')
+                self.update(self.axial_fig)
+            #Update Sagital
+            if self.clicked_line == self.v_line_coronal:
+                rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,self.coronal_x,:])
+                self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
+                self.update(self.sagital_fig)
+            
+            self.coronal_fig.canvas.mpl_disconnect(self.releaser_coronal)
+            self.coronal_fig.canvas.mpl_disconnect(self.follower_coronal)
+            
     def canvas_setup(self,fig_width,fig_height,view,bool=True):
         '''Setting up a canvas to view an image in its graphics view'''
         scene= QGraphicsScene()
@@ -184,22 +300,41 @@ class Dicom_Viewer_App(QMainWindow , ui):
         if self.dicom_path=='':
             return
         #Reset Lines
-        self.h_line.set_ydata([256, 256])
-        self.v_line.set_xdata([256, 256])
-        self.d_line.set_xdata([0, 512])
-        self.d_line.set_ydata([512, 0])
+        self.h_line_axial.set_ydata([256, 256])
+        self.h_line_sagital.set_ydata([128, 128])
+        self.h_line_coronal.set_ydata([128, 128])
+        self.v_line_axial.set_xdata([256, 256])
+        self.v_line_coronal.set_xdata([256, 256])
+        self.v_line_sagital.set_xdata([256, 256])
+        self.d_line_axial.set_xdata([0, 512])
+        self.d_line_axial.set_ydata([512, 0])
+        self.update(self.axial_fig)
+        self.update(self.sagital_fig)
+        self.update(self.coronal_fig)
+        
+        #Reset Axial
+        self.axial_axes.imshow(self.volume3d[:,:,117], cmap='gray')        
         self.update(self.axial_fig)
         
         #Reset Sagital
-        
         rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,256,:])
         self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')        
         self.update(self.sagital_fig)
+        
         #Reset Coronal
         rotated_coronal_matrix = self.rotate_matrix(self.volume3d[256,:,:])
         self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
         self.update(self.coronal_fig)
 
+        try:
+            self.axial_fig.canvas.mpl_disconnect(self.releaser)
+            self.axial_fig.canvas.mpl_disconnect(self.follower)
+            self.coronal_fig.canvas.mpl_disconnect(self.releaser_coronal)
+            self.coronal_fig.canvas.mpl_disconnect(self.follower_coronal)
+            self.sagital_fig.canvas.mpl_disconnect(self.releaser_sagital)
+            self.sagital_fig.canvas.mpl_disconnect(self.follower_sagital)
+        except:
+            return
     # def onclick_axial(self,event):
     #     self.axial_x, self.axial_y = round(event.xdata), round(event.ydata)
     #     line = self.axial_axes.axvline(x=self.axial_x, visible=True)
