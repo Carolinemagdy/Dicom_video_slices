@@ -27,7 +27,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="diagonal_view">
+   <widget class="QGraphicsView" name="oblique_view">
     <property name="geometry">
      <rect>
       <x>460</x>

@@ -27,6 +27,9 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.volume3d=''
         self.axial_x=0
         self.axial_y=0
+        self.x_global=256
+        self.y_global=256
+        self.z_global=117
         
 
     def Handle_Buttons(self):
@@ -71,9 +74,10 @@ class Dicom_Viewer_App(QMainWindow , ui):
             array2D=s.pixel_array
             self.volume3d[:,:,i]= array2D
 
+        # self.volume3d_R = np.rot90(self.volume3d,1,(1,2))
         #Axial Canvas
         self.axial_fig,self.axial_axes = self.canvas_setup(397,305,self.axial_view)
-        self.axial_axes.imshow(self.volume3d[:,:,117], cmap='gray')
+        self.axial_axes.imshow(self.volume3d[:,:,self.z_global], cmap='gray')
         # _ = self.axial_fig.canvas.mpl_connect('button_press_event', self.onclick_axial)
 
         #Adding Lines to axial plane
@@ -91,7 +95,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         
         #Sagital Canvas
         self.sagital_fig,self.sagital_axes = self.canvas_setup(397,305,self.sagital_view)
-        rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,256,:])
+        rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,self.y_global,:])
         self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
 
 
@@ -107,8 +111,13 @@ class Dicom_Viewer_App(QMainWindow , ui):
 
         #Coronal Canvas
         self.coronal_fig,self.coronal_axes = self.canvas_setup(397,305,self.coronal_view)
-        rotated_coronal_matrix = self.rotate_matrix(self.volume3d[256,:,:])
+        rotated_coronal_matrix = self.rotate_matrix(self.volume3d[self.x_global,:,:])
         self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
+
+        #Oblique_view Canvas
+        self.oblique_fig,self.oblique_axes = self.canvas_setup(397,305,self.oblique_view)
+        rotated_oblique_matrix = self.rotate_matrix(self.volume3d[self.x_global,:,:])
+        self.oblique_axes.imshow(rotated_oblique_matrix, cmap='gray')
 
         #Adding Lines to coronal plane
         self.h_line_coronal = lines.Line2D((0,512),(128,128),picker=5)
@@ -157,7 +166,8 @@ class Dicom_Viewer_App(QMainWindow , ui):
         if self.clicked_line == self.h_line_axial:
             self.h_line_axial.set_ydata([event.ydata, event.ydata])
             self.v_line_sagital.set_xdata([event.ydata, event.ydata])
-            rotated_coronal_matrix = self.rotate_matrix(self.volume3d[round(event.ydata),:,:])
+            self.x_global=round(event.ydata)
+            rotated_coronal_matrix = self.rotate_matrix(self.volume3d[self.x_global,:,:])
             self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
@@ -165,8 +175,8 @@ class Dicom_Viewer_App(QMainWindow , ui):
         elif self.clicked_line == self.v_line_axial:
             self.v_line_axial.set_xdata([event.xdata, event.xdata])
             self.v_line_coronal.set_xdata([event.xdata, event.xdata])
-            
-            rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,round(event.xdata),:])
+            self.y_global = round(event.xdata)
+            rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,self.y_global,:])
             self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
@@ -175,7 +185,8 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.h_line_coronal.set_ydata([event.ydata, event.ydata])
 
             self.h_line_sagital.set_ydata([event.ydata, event.ydata])
-            self.axial_axes.imshow(self.volume3d[:,:,234-round(event.ydata)], cmap='gray') 
+            self.z_global = 234-round(event.ydata)
+            self.axial_axes.imshow(self.volume3d[:,:,self.z_global], cmap='gray') 
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
            
@@ -183,23 +194,25 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.v_line_coronal.set_xdata([event.xdata, event.xdata])
             
             self.v_line_axial.set_xdata([event.xdata, event.xdata])
-            rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,round(event.xdata),:])
+            self.y_global = round(event.xdata)
+            rotated_sagital_matrix = self.rotate_matrix(self.volume3d[:,self.y_global,:])
             self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
 
         elif self.clicked_line == self.h_line_sagital:
             self.h_line_sagital.set_ydata([event.ydata, event.ydata])
-           
             self.h_line_coronal.set_ydata([event.ydata, event.ydata])
-            self.axial_axes.imshow(self.volume3d[:,:,234-round(event.ydata)], cmap='gray')
+            self.z_global = 234-round(event.ydata)
+            self.axial_axes.imshow(self.volume3d[:,:,self.z_global], cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
 
         elif self.clicked_line == self.v_line_sagital:
             self.v_line_sagital.set_xdata([event.xdata, event.xdata])
             self.h_line_axial.set_ydata([event.xdata, event.xdata])
-            rotated_coronal_matrix = self.rotate_matrix(self.volume3d[round(event.xdata),:,:])
+            self.x_global=round(event.xdata)
+            rotated_coronal_matrix = self.rotate_matrix(self.volume3d[self.x_global,:,:])
             self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
@@ -239,11 +252,34 @@ class Dicom_Viewer_App(QMainWindow , ui):
                         x2=512
                         y2=(slope*(512-event.xdata))+ event.ydata
             if x1>x2:     
-                self.d_line.set_xdata([x2, x1])
+                self.d_line.set_xdata([x2, x1,])
                 self.d_line.set_ydata([y2, y1])
             elif x1<x2:
                 self.d_line.set_xdata([x1, x2])
                 self.d_line.set_ydata([y1, y2])
+
+            ###Hna hnzabat el oblique
+            
+            p1 = np.array([x1, y1,self.z_global])
+            p2 = np.array([x2, y2,self.z_global])
+            p3 = np.array([x1, y1,self.z_global+1])
+
+            # These two vectors are in the plane
+            v1 = p3 - p1
+            v2 = p2 - p1
+
+            # the cross product is a vector normal to the plane
+            cp = np.cross(v1, v2)
+            a, b, c = cp
+
+            # This evaluates a * x3 + b * y3 + c * z3 which equals d
+            d = np.dot(cp, p3)
+            print('The equation is {0}x + {1}y + {2}z = {3}'.format(a, b, c, d))
+
+            # rotated_oblique_matrix = self.rotate_matrix(self.volume3d[#######])
+            # self.oblique_axes.imshow(rotated_oblique_matrix, cmap='gray')
+            # self.update(self.oblique_fig)
+            
         self.update(self.axial_fig)
             
 
