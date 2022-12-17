@@ -251,33 +251,48 @@ class Dicom_Viewer_App(QMainWindow , ui):
                     if x2 <0 or x2> 512:
                         x2=512
                         y2=(slope*(512-event.xdata))+ event.ydata
+            self.points=[]
+            x1=int(round(x1))
+            x2=int(round(x2))
+            y1=int(round(y1))
+            y2=int(round(y2))
+            c=y1-(slope*x1)
+            c=int(round(c))
             if x1>x2:     
                 self.d_line.set_xdata([x2, x1,])
                 self.d_line.set_ydata([y2, y1])
+                for x in range(x2, x1):
+                    y = slope*x + c
+                    y=int(y)
+                    if isinstance(y, int) and (x,y) not in [x2,x1]:
+                        self.points.append((x,y))
+
             elif x1<x2:
                 self.d_line.set_xdata([x1, x2])
                 self.d_line.set_ydata([y1, y2])
-
+                for x in range(x1, x2):
+                    y = slope*x + c
+                    y=int(y)
+                    if isinstance(y, int) and (x,y) not in [x1,x2]:
+                        self.points.append((x,y))
             ###Hna hnzabat el oblique
             
-            p1 = np.array([x1, y1,self.z_global])
-            p2 = np.array([x2, y2,self.z_global])
-            p3 = np.array([x1, y1,self.z_global+1])
+            
+            # p1 = np.array([x1, y1,self.z_global])
+            # p2 = np.array([x2, y2,self.z_global])
+            # p3 = np.array([x1, y1,self.z_global+1])
 
-            # These two vectors are in the plane
-            v1 = p3 - p1
-            v2 = p2 - p1
-
-            # the cross product is a vector normal to the plane
-            cp = np.cross(v1, v2)
-            a, b, c = cp
-
-            # This evaluates a * x3 + b * y3 + c * z3 which equals d
-            d = np.dot(cp, p3)
-            print('The equation is {0}x + {1}y + {2}z = {3}'.format(a, b, c, d))
-
+            # # These two vectors are in the plane
+            # v1 = p3 - p1
+            # v2 = p2 - p1
+            # # the cross product is a vector normal to the plane
+            # cp = np.cross(v1, v2)
+            # a, b, c = cp
+            # # This evaluates a * x3 + b * y3 + c * z3 which equals d
+            # d = np.dot(cp, p3)
+            # print('The equation is {0}x + {1}y + {2}z = {3}'.format(a, b, c, d))
             # rotated_oblique_matrix = self.rotate_matrix(self.volume3d[#######])
-            # self.oblique_axes.imshow(rotated_oblique_matrix, cmap='gray')
+            # self.oblique_axes.imshow(oblique_slice, cmap='gray')
             # self.update(self.oblique_fig)
             
         self.update(self.axial_fig)
@@ -292,6 +307,16 @@ class Dicom_Viewer_App(QMainWindow , ui):
         if self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial or self.clicked_line == self.d_line:
             self.axial_y = round(self.h_line_axial.get_ydata()[0])
             self.axial_x = round(self.v_line_axial.get_xdata()[0])
+            if self.clicked_line==self.d_line:
+                print(len(self.points))
+                oblique_slice=np.zeros((len(self.points),self.volume3d.shape[2]))
+                for i in range (self.volume3d.shape[2]):
+                    for point in self.points:
+                        print(point,"PPPPPPPPPPP")
+                        # print(self.volume3d[point[0],point[1],i],"VVVVVVVVVVV")
+                        oblique_slice[:,i]=self.volume3d[point[0],point[1],i]
+                        self.oblique_axes.imshow(oblique_slice, cmap='gray')
+                        self.update(self.oblique_fig)
 
             #Update Sagital
             if self.clicked_line == self.v_line_axial:
