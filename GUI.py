@@ -31,6 +31,12 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.y_global=256
         self.z_global=117
         self.slope=0
+        self.oblique_slice=0
+        self.oblique_slice_initial=0
+        self.x_coordinates=[]
+        self.x_coordinates_=[]
+        self.y_coordinates=[]
+        self.y_coordinates_=[]
 
     def Handle_Buttons(self):
         '''Initializing interface buttons'''
@@ -116,8 +122,18 @@ class Dicom_Viewer_App(QMainWindow , ui):
 
         #Oblique_view Canvas
         self.oblique_fig,self.oblique_axes = self.canvas_setup(397,305,self.oblique_view)
-        rotated_oblique_matrix = self.rotate_matrix(self.volume3d[self.x_global,:,:])
-        self.oblique_axes.imshow(rotated_oblique_matrix, cmap='gray')
+
+        for x in range(0, 512):
+            y = 1*x + 0
+            y=int(y)
+            if isinstance(y, int) and (x,y) not in [0,512]:
+                self.x_coordinates_.append(x)
+                self.y_coordinates_.append(y)
+        self.oblique_slice_initial=np.zeros((self.volume3d.shape[2],512))
+        for i in range(self.volume3d.shape[2]):
+            print(i,self.volume3d.shape)
+            self.oblique_slice_initial[i,:]=self.volume3d[self.y_coordinates_,self.x_coordinates_,233-i]
+        self.oblique_axes.imshow(self.oblique_slice_initial, cmap='gray')
 
         #Adding Lines to coronal plane
         self.h_line_coronal = lines.Line2D((0,512),(128,128),picker=5)
@@ -300,7 +316,15 @@ class Dicom_Viewer_App(QMainWindow , ui):
                         x=int(x)
                         if isinstance(x, int) and (x,y) not in [y1,y2]:
                             self.x_coordinates.append(x)
-                            self.y_coordinates.append(y)            
+                            self.y_coordinates.append(y)
+        self.oblique_slice=np.zeros((self.volume3d.shape[2],len(self.x_coordinates)))
+        for i in range(self.volume3d.shape[2]):
+            print(i,self.volume3d.shape)
+            self.oblique_slice[i,:]=self.volume3d[self.y_coordinates,self.x_coordinates,233-i]
+        # rotated_oblique_matrix = self.rotate_matrix(oblique_slice)
+        # rotated_oblique_matrix = self.rotate_matrix(rotated_oblique_matrix)
+        self.oblique_axes.imshow(self.oblique_slice, cmap='gray')
+        self.update(self.oblique_fig)            
         self.update(self.axial_fig)
             
 
@@ -313,14 +337,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         if self.clicked_line == self.v_line_axial or self.clicked_line == self.h_line_axial or self.clicked_line == self.d_line:
             self.axial_y = round(self.h_line_axial.get_ydata()[0])
             self.axial_x = round(self.v_line_axial.get_xdata()[0])
-            if self.clicked_line==self.d_line:
-                oblique_slice=np.zeros((self.volume3d.shape[2],len(self.x_coordinates)))
-                for i in range (self.volume3d.shape[2]):
-                    oblique_slice[i,:]=self.volume3d[self.y_coordinates,self.x_coordinates,i]
-                rotated_oblique_matrix = self.rotate_matrix(oblique_slice)
-                rotated_oblique_matrix = self.rotate_matrix(rotated_oblique_matrix)
-                self.oblique_axes.imshow(rotated_oblique_matrix, cmap='gray')
-                self.update(self.oblique_fig)
+            
 
             #Update Sagital
             if self.clicked_line == self.v_line_axial:
@@ -405,6 +422,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.update(self.axial_fig)
         self.update(self.sagital_fig)
         self.update(self.coronal_fig)
+        self.update(self.oblique_fig)
         
         #Reset Axial
         self.axial_axes.imshow(self.volume3d[:,:,117], cmap='gray')        
@@ -419,6 +437,11 @@ class Dicom_Viewer_App(QMainWindow , ui):
         rotated_coronal_matrix = self.rotate_matrix(self.volume3d[256,:,:])
         self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
         self.update(self.coronal_fig)
+
+        #Reset oblique
+        # rotated_oplique_matrix = self.rotate_matrix(self.volume3d[256,:,:])
+        self.oblique_axes.imshow(self.oblique_slice_initial, cmap='gray')
+        self.update(self.oblique_fig)
 
         try:
             self.axial_fig.canvas.mpl_disconnect(self.releaser)
