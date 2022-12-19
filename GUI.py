@@ -251,7 +251,8 @@ class Dicom_Viewer_App(QMainWindow , ui):
                     if x2 <0 or x2> 512:
                         x2=512
                         y2=(slope*(512-event.xdata))+ event.ydata
-            self.points=[]
+            self.x_coordinates=[]
+            self.y_coordinates=[]
             x1=int(round(x1))
             x2=int(round(x2))
             y1=int(round(y1))
@@ -265,7 +266,9 @@ class Dicom_Viewer_App(QMainWindow , ui):
                     y = slope*x + c
                     y=int(y)
                     if isinstance(y, int) and (x,y) not in [x2,x1]:
-                        self.points.append((x,y))
+                        self.x_coordinates.append(x)
+                        self.y_coordinates.append(y)
+
 
             elif x1<x2:
                 self.d_line.set_xdata([x1, x2])
@@ -274,7 +277,9 @@ class Dicom_Viewer_App(QMainWindow , ui):
                     y = slope*x + c
                     y=int(y)
                     if isinstance(y, int) and (x,y) not in [x1,x2]:
-                        self.points.append((x,y))
+                        self.x_coordinates.append(x)
+                        self.y_coordinates.append(y)
+
             ###Hna hnzabat el oblique
             
             
@@ -308,15 +313,14 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.axial_y = round(self.h_line_axial.get_ydata()[0])
             self.axial_x = round(self.v_line_axial.get_xdata()[0])
             if self.clicked_line==self.d_line:
-                print(len(self.points))
-                oblique_slice=np.zeros((len(self.points),self.volume3d.shape[2]))
+                oblique_slice=np.zeros((self.volume3d.shape[2],len(self.x_coordinates)))
+                z_slices=np.arange(0,self.volume3d.shape[2])
                 for i in range (self.volume3d.shape[2]):
-                    for point in self.points:
-                        print(point,"PPPPPPPPPPP")
-                        # print(self.volume3d[point[0],point[1],i],"VVVVVVVVVVV")
-                        oblique_slice[:,i]=self.volume3d[point[0],point[1],i]
-                        self.oblique_axes.imshow(oblique_slice, cmap='gray')
-                        self.update(self.oblique_fig)
+                    print(oblique_slice.shape,"OOOOO",len(self.x_coordinates),z_slices.shape)
+                    
+                    oblique_slice[i,:]=self.volume3d[self.x_coordinates,self.y_coordinates,i]
+                self.oblique_axes.imshow(oblique_slice, cmap='gray')
+                self.update(self.oblique_fig)
 
             #Update Sagital
             if self.clicked_line == self.v_line_axial:
