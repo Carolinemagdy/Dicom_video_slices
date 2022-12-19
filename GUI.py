@@ -300,30 +300,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
                         x=int(x)
                         if isinstance(x, int) and (x,y) not in [y1,y2]:
                             self.x_coordinates.append(x)
-                            self.y_coordinates.append(y)
-            # print(x1,y1)
-            # print(x2,y2)
-
-            ###Hna hnzabat el oblique
-            
-            
-            # p1 = np.array([x1, y1,self.z_global])
-            # p2 = np.array([x2, y2,self.z_global])
-            # p3 = np.array([x1, y1,self.z_global+1])
-
-            # # These two vectors are in the plane
-            # v1 = p3 - p1
-            # v2 = p2 - p1
-            # # the cross product is a vector normal to the plane
-            # cp = np.cross(v1, v2)
-            # a, b, c = cp
-            # # This evaluates a * x3 + b * y3 + c * z3 which equals d
-            # d = np.dot(cp, p3)
-            # print('The equation is {0}x + {1}y + {2}z = {3}'.format(a, b, c, d))
-            # rotated_oblique_matrix = self.rotate_matrix(self.volume3d[#######])
-            # self.oblique_axes.imshow(oblique_slice, cmap='gray')
-            # self.update(self.oblique_fig)
-            
+                            self.y_coordinates.append(y)            
         self.update(self.axial_fig)
             
 
@@ -338,12 +315,8 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.axial_x = round(self.v_line_axial.get_xdata()[0])
             if self.clicked_line==self.d_line:
                 oblique_slice=np.zeros((self.volume3d.shape[2],len(self.x_coordinates)))
-                z_slices=np.arange(0,self.volume3d.shape[2])
                 for i in range (self.volume3d.shape[2]):
-                    print(oblique_slice.shape,"OOOOO",len(self.x_coordinates),z_slices.shape)
-                    # print(slope)
-                    
-                    oblique_slice[i,:]=self.volume3d[self.x_coordinates,self.y_coordinates,i]
+                    oblique_slice[i,:]=self.volume3d[self.y_coordinates,self.x_coordinates,i]
                 rotated_oblique_matrix = self.rotate_matrix(oblique_slice)
                 rotated_oblique_matrix = self.rotate_matrix(rotated_oblique_matrix)
                 self.oblique_axes.imshow(rotated_oblique_matrix, cmap='gray')
