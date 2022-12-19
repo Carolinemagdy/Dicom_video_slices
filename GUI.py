@@ -30,7 +30,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.x_global=256
         self.y_global=256
         self.z_global=117
-        
+        self.slope=0
 
     def Handle_Buttons(self):
         '''Initializing interface buttons'''
@@ -259,26 +259,50 @@ class Dicom_Viewer_App(QMainWindow , ui):
             y2=int(round(y2))
             c=y1-(slope*x1)
             c=int(round(c))
-            if x1>x2:     
-                self.d_line.set_xdata([x2, x1,])
-                self.d_line.set_ydata([y2, y1])
-                for x in range(x2, x1):
-                    y = slope*x + c
-                    y=int(y)
-                    if isinstance(y, int) and (x,y) not in [x2,x1]:
-                        self.x_coordinates.append(x)
-                        self.y_coordinates.append(y)
+            if abs(x1-x2)>= abs(y1-y2):
+                if x1>x2:     
+                    self.d_line.set_xdata([x2, x1,])
+                    self.d_line.set_ydata([y2, y1])
+                    for x in range(x2, x1):
+                        y = slope*x + c
+                        y=int(y)
+                        if isinstance(y, int) and (x,y) not in [x2,x1]:
+                            self.x_coordinates.append(x)
+                            self.y_coordinates.append(y)
 
 
-            elif x1<x2:
-                self.d_line.set_xdata([x1, x2])
-                self.d_line.set_ydata([y1, y2])
-                for x in range(x1, x2):
-                    y = slope*x + c
-                    y=int(y)
-                    if isinstance(y, int) and (x,y) not in [x1,x2]:
-                        self.x_coordinates.append(x)
-                        self.y_coordinates.append(y)
+                elif x1<x2:
+                    self.d_line.set_xdata([x1, x2])
+                    self.d_line.set_ydata([y1, y2])
+                    for x in range(x1, x2):
+                        y = slope*x + c
+                        y=int(y)
+                        if isinstance(y, int) and (x,y) not in [x1,x2]:
+                            self.x_coordinates.append(x)
+                            self.y_coordinates.append(y)
+            else:
+                if y1>y2:     
+                    self.d_line.set_xdata([x2, x1,])
+                    self.d_line.set_ydata([y2, y1])
+                    for y in range(y2, y1):
+                        x = (y - c)/slope
+                        x=int(x)
+                        if isinstance(x, int) and (x,y) not in [y2,y1]:
+                            self.x_coordinates.append(x)
+                            self.y_coordinates.append(y)
+
+
+                elif y2>y1:     
+                    self.d_line.set_xdata([x1, x2,])
+                    self.d_line.set_ydata([y1, y2])
+                    for y in range(y1, y2):
+                        x = (y - c)/slope
+                        x=int(x)
+                        if isinstance(x, int) and (x,y) not in [y1,y2]:
+                            self.x_coordinates.append(x)
+                            self.y_coordinates.append(y)
+            # print(x1,y1)
+            # print(x2,y2)
 
             ###Hna hnzabat el oblique
             
@@ -317,9 +341,12 @@ class Dicom_Viewer_App(QMainWindow , ui):
                 z_slices=np.arange(0,self.volume3d.shape[2])
                 for i in range (self.volume3d.shape[2]):
                     print(oblique_slice.shape,"OOOOO",len(self.x_coordinates),z_slices.shape)
+                    # print(slope)
                     
                     oblique_slice[i,:]=self.volume3d[self.x_coordinates,self.y_coordinates,i]
-                self.oblique_axes.imshow(oblique_slice, cmap='gray')
+                rotated_oblique_matrix = self.rotate_matrix(oblique_slice)
+                rotated_oblique_matrix = self.rotate_matrix(rotated_oblique_matrix)
+                self.oblique_axes.imshow(rotated_oblique_matrix, cmap='gray')
                 self.update(self.oblique_fig)
 
             #Update Sagital

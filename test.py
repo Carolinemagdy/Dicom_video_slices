@@ -65,3 +65,5 @@ y=[0,1]
 # print(x,y)
 print(arr[x,y ])
 print(np.arange(0,256))
+for i in range(2):
+    print(i)
