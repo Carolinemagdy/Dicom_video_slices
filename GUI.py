@@ -131,7 +131,6 @@ class Dicom_Viewer_App(QMainWindow , ui):
                 self.y_coordinates_.append(y)
         self.oblique_slice_initial=np.zeros((self.volume3d.shape[2],512))
         for i in range(self.volume3d.shape[2]):
-            print(i,self.volume3d.shape)
             self.oblique_slice_initial[i,:]=self.volume3d[self.y_coordinates_,self.x_coordinates_,233-i]
         self.oblique_axes.imshow(self.oblique_slice_initial, cmap='gray')
 
@@ -319,7 +318,6 @@ class Dicom_Viewer_App(QMainWindow , ui):
                             self.y_coordinates.append(y)
         self.oblique_slice=np.zeros((self.volume3d.shape[2],len(self.x_coordinates)))
         for i in range(self.volume3d.shape[2]):
-            print(i,self.volume3d.shape)
             self.oblique_slice[i,:]=self.volume3d[self.y_coordinates,self.x_coordinates,233-i]
         # rotated_oblique_matrix = self.rotate_matrix(oblique_slice)
         # rotated_oblique_matrix = self.rotate_matrix(rotated_oblique_matrix)
