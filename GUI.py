@@ -170,6 +170,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
             Area+=(x[j]+x[i])*(y[j]-y[i])
             j=1
         Area=int(abs(Area/2))
+        Area="{:.2f}".format(Area)
 
         self.Calculation_label.setText("area of polygon\n"+str(Area)+"mm")
 
@@ -221,7 +222,6 @@ class Dicom_Viewer_App(QMainWindow , ui):
        
         self.axial_axes.plot(u+a*np.cos(t),v+b*np.sin(t), linewidth=3, color='red')
         area=pi*a*b
-        area="{:.2f}".format(area)
 
         self.update(self.axial_fig)
         self.Calculation_label.setText("ellipse area\n"+str(area))
