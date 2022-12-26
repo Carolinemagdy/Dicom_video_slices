@@ -170,7 +170,6 @@ class Dicom_Viewer_App(QMainWindow , ui):
             Area+=(x[j]+x[i])*(y[j]-y[i])
             j=1
         Area=int(abs(Area/2))
-        Area="{:.2f}".format(Area)
 
         self.Calculation_label.setText("area of polygon\n"+str(Area)+"mm")
 
