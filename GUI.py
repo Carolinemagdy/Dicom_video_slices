@@ -209,7 +209,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         print(360 - val)
         print(val)
 
-        self.Calculation_label.setText("Acute Angel: "+str(round(360 - val))+"\n"+"obtuse Angel:"+str(round(val)))
+        self.Calculation_label.setText("Acute Angel: "+str(round(180 - val))+"\n"+"obtuse Angel:"+str(round(val)))
 
     def DrawEllipse(self):
         x,y=self.Region.get_coords()
