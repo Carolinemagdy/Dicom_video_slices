@@ -14,7 +14,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.lines as lines
 import ROI as roi # ROI_class.py
-from math import pi
+from math import pi,atan
+import math
 matplotlib.use('Qt5Agg')
 
 ui,_ = loadUiType(os.path.join(os.path.dirname(__file__),'dicom_viewer_ui.ui'))
@@ -177,17 +178,38 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def GetSlope1(self):
         x,y=self.Region.get_coords()
         self.slopeL1=((y[1]-y[0])/(x[1]-x[0]))
+        print(x,y)
+        print(self.slopeL1)
 
     def GetSlope2(self):
         x,y=self.Region.get_coords()
         self.slopeL2=((y[1]-y[0])/(x[1]-x[0]))
+        print(self.slopeL2)
 
+    def dot(self,vA, vB):
+        return vA[0]*vB[0]+vA[1]*vB[1]
     def GetAngel(self):
-        TanCeta=np.abs((self.slopeL1-self.slopeL2)/(1+(self.slopeL2*self.slopeL1)))
-        ceta=np.arctan(TanCeta)
-        acuteAngel=ceta
-        obtuceAngel=180-ceta
-        self.Calculation_label.setText("Acute Angel"+str(acuteAngel)+"\n"+"obtuceAngel"+str(obtuceAngel))
+        # TanCeta=np.abs((self.slopeL1-self.slopeL2)/(1+(self.slopeL2*self.slopeL1)))
+        # ceta=np.arctan(TanCeta)
+        # acuteAngel=ceta
+        # obtuceAngel=180-ceta
+        # Get nicer vector form
+     
+        # Store the tan value  of the angle
+        angle = abs((self.slopeL2 - self.slopeL1) / (1 + self.slopeL1 * self.slopeL2))
+    
+        # Calculate tan inverse of the angle
+        ret = atan(angle)
+    
+        # Convert the angle from
+        # radian to degree
+        val = (ret * 180) / pi
+    
+        # Print the result        
+        print(360 - val)
+        print(val)
+
+        self.Calculation_label.setText("Acute Angel: "+str(round(360 - val))+"\n"+"obtuse Angel:"+str(round(val)))
 
     def DrawEllipse(self):
         x,y=self.Region.get_coords()

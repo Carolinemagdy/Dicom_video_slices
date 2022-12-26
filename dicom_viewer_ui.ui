@@ -245,10 +245,18 @@ background-color: rgb(188, 195, 255);</string>
     <property name="geometry">
      <rect>
       <x>920</x>
-      <y>590</y>
-      <width>141</width>
-      <height>71</height>
+      <y>570</y>
+      <width>161</width>
+      <height>111</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Century Gothic</family>
+      <pointsize>7</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(255, 255, 127);
@@ -256,6 +264,9 @@ background-color: rgb(188, 195, 255);</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QPushButton" name="Area_button">
