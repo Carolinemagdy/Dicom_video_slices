@@ -13,6 +13,8 @@ import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.lines as lines
+import ROI as roi # ROI_class.py
+from math import pi
 matplotlib.use('Qt5Agg')
 
 ui,_ = loadUiType(os.path.join(os.path.dirname(__file__),'dicom_viewer_ui.ui'))
@@ -43,8 +45,15 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.browse_button.clicked.connect(self.Browse)
         self.browse_button_2.clicked.connect(self.Browse)
         self.reset_button.clicked.connect(self.reset)
-        
-
+        self.Draw_button.clicked.connect(self.choose_roi)
+        self.Distance_button.clicked.connect(self.GetDistance)
+        self.Area_button.clicked.connect(self.GetArea)
+        self.Ellipse_button.clicked.connect(self.DrawEllipse)
+        self.XR_button.clicked.connect(self.get_X_Radius)
+        self.YR_button.clicked.connect(self.get_Y_Radius)
+        self.Slope_button.clicked.connect(self.GetSlope1)
+        self.Slope_button_2.clicked.connect(self.GetSlope2)
+        self.Angel_button.clicked.connect(self.GetAngel)
     def Browse(self):
         '''Browse to get Dicom Folder'''
         #Getting folder path
@@ -57,6 +66,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.dicom_path=''
             return
 
+
     def build_3D_volume(self):
         '''Construct 3D volume from dicom slices'''
         images=os.listdir(self.dicom_path)
@@ -65,9 +75,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         slices = [dicom.dcmread(self.dicom_path+'/'+image) for image in images]
         #sorting the images with respect to Z axis
         sorted_slices = sorted(slices,key=lambda x:x.ImagePositionPatient[2])
-
         #filling the volume 3d with the values of each of the slices
-
         #getting the shape of the image
         img_shape = list(slices[0].pixel_array.shape)
         #adding size of the slices to the shape
@@ -83,7 +91,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         # self.volume3d_R = np.rot90(self.volume3d,1,(1,2))
         #Axial Canvas
         self.axial_fig,self.axial_axes = self.canvas_setup(397,305,self.axial_view)
-        self.axial_axes.imshow(self.volume3d[:,:,self.z_global], cmap='gray')
+        self.axial_image=self.axial_axes.imshow(self.volume3d[:,:,self.z_global], cmap='gray')
         # _ = self.axial_fig.canvas.mpl_connect('button_press_event', self.onclick_axial)
 
         #Adding Lines to axial plane
@@ -148,8 +156,70 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def rotate_matrix(self,matrix):
         return [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0])-1,-1,-1)]
     
+
+    def choose_roi(self):
+        self.Region = roi.new_ROI(self.axial_image)
+        
+    def GetArea(self):
+        x,y=self.Region.get_coords()
+        n=len(x)
+        j=n-1
+        Area=0
+        for i in range(0,n):
+            Area+=(x[j]+x[i])*(y[j]-y[i])
+            j=1
+        Area=int(abs(Area/2))
+        Area="{:.2f}".format(Area)
+
+        self.Calculation_label.setText("area of polygon\n"+str(Area)+"mm")
+
+
+    def GetSlope1(self):
+        x,y=self.Region.get_coords()
+        self.slopeL1=((y[1]-y[0])/(x[1]-x[0]))
+
+    def GetSlope2(self):
+        x,y=self.Region.get_coords()
+        self.slopeL2=((y[1]-y[0])/(x[1]-x[0]))
+
+    def GetAngel(self):
+        TanCeta=np.abs((self.slopeL1-self.slopeL2)/(1+(self.slopeL2*self.slopeL1)))
+        ceta=np.arctan(TanCeta)
+        acuteAngel=ceta
+        obtuceAngel=180-ceta
+        self.Calculation_label.setText("Acute Angel"+str(acuteAngel)+"\n"+"obtuceAngel"+str(obtuceAngel))
+
+    def DrawEllipse(self):
+        x,y=self.Region.get_coords()
+        u=x     #x-position of the center
+        v=y    #y-position of the center
+        a=np.abs(self.radius_on_X -x)    #radius on the x-axis
+        b=np.abs(self.radius_on_Y -y)   #radius on the y-axis
+
+        t = np.linspace(0, 2*pi, 100)
+       
+        self.axial_axes.plot(u+a*np.cos(t),v+b*np.sin(t), linewidth=3, color='red')
+        area=pi*a*b
+        area="{:.2f}".format(area)
+
+        self.update(self.axial_fig)
+        self.Calculation_label.setText("ellipse area\n"+str(area))
+
+    def get_X_Radius(self):
+        self.radius_on_X,y=self.Region.get_coords()
+
+    def get_Y_Radius(self):
+        x,self.radius_on_Y=self.Region.get_coords()
+    def GetDistance(self):
+        x,y=self.Region.get_coords()
+        Distance=np.sqrt((x[1]-x[0])**2+(y[1]-y[0])**2)
+        Distance="{:.2f}".format(Distance/3.779528)
+        self.Calculation_label.setText("Distance\n"+str(Distance)+"mm")
+        print(Distance)
+
     # pick line when I select it 
     def clickonline(self, event):
+      
         '''Picks line on canvas'''
         self.clicked_line = event.artist
         if event.artist == self.d_line:

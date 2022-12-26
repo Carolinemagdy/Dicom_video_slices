@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>902</width>
-    <height>843</height>
+    <width>1109</width>
+    <height>838</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -192,6 +192,239 @@ background-color: rgb(85, 85, 127);</string>
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="Draw_button">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>920</x>
+      <y>270</y>
+      <width>151</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>Draw</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Distance_button">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>350</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>Calculate Distance</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Calculation_label">
+    <property name="geometry">
+     <rect>
+      <x>920</x>
+      <y>590</y>
+      <width>141</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 127);
+</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Area_button">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>400</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>Calculate Area</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="YR_button">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>150</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>Y Radius</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="XR_button">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>80</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>X Radius</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Ellipse_button">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>520</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>Ellipse Area</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Slope_button">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>700</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>Slope of Line 1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Slope_button_2">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>750</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>Slope of Line 2</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Angel_button">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>460</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Broadway&quot;;
+color: rgb(255, 255, 255);
+background-color: rgb(188, 195, 255);</string>
+    </property>
+    <property name="text">
+     <string>Get Angle</string>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
