@@ -158,30 +158,35 @@ class Dicom_Viewer_App(QMainWindow , ui):
         return [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0])-1,-1,-1)]
     
 
+    #Drawing on the axial image (line,polygon,points of ellipse)
     def choose_roi(self):
         self.Region = roi.new_ROI(self.axial_image)
         
     def GetArea(self):
+        #getting Coordinates of all the points
         x,y=self.Region.get_coords()
         n=len(x)
         j=n-1
         Area=0
+        #calculate the value  of sholeace formula 
         for i in range(0,n):
             Area+=(x[j]+x[i])*(y[j]-y[i])
-            j=1
+            j=i    # j is previous vertex to i
         Area=int(abs(Area/2))
         Area="{:.2f}".format(Area)
 
-        self.Calculation_label.setText("area of polygon\n"+str(Area)+"mm")
+        self.Calculation_label.setText("area of polygon\n"+str(Area))
 
 
     def GetSlope1(self):
+        #getting poitns of line 1 to calculate slope 1
         x,y=self.Region.get_coords()
         self.slopeL1=((y[1]-y[0])/(x[1]-x[0]))
         print(x,y)
         print(self.slopeL1)
 
     def GetSlope2(self):
+        #getting poitns of line 2 to calculate slope 2
         x,y=self.Region.get_coords()
         self.slopeL2=((y[1]-y[0])/(x[1]-x[0]))
         print(self.slopeL2)
@@ -189,12 +194,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
     def dot(self,vA, vB):
         return vA[0]*vB[0]+vA[1]*vB[1]
     def GetAngel(self):
-        # TanCeta=np.abs((self.slopeL1-self.slopeL2)/(1+(self.slopeL2*self.slopeL1)))
-        # ceta=np.arctan(TanCeta)
-        # acuteAngel=ceta
-        # obtuceAngel=180-ceta
-        # Get nicer vector form
-     
+        
         # Store the tan value  of the angle
         angle = abs((self.slopeL2 - self.slopeL1) / (1 + self.slopeL1 * self.slopeL2))
     
@@ -212,6 +212,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.Calculation_label.setText("Acute Angel: "+str(round(val))+"\n"+"obtuse Angel:"+str(round(360 - val)))
 
     def DrawEllipse(self):
+        #getting coordinates of center points
         x,y=self.Region.get_coords()
         u=x     #x-position of the center
         v=y    #y-position of the center
@@ -227,15 +228,18 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.Calculation_label.setText("ellipse area\n"+str(area))
 
     def get_X_Radius(self):
+        #getting X radius of ellipse
         self.radius_on_X,y=self.Region.get_coords()
 
     def get_Y_Radius(self):
+        #getting y radius of ellipse
         x,self.radius_on_Y=self.Region.get_coords()
     def GetDistance(self):
+        #getting corrdinates of line to calculate it's distance using distance formula
         x,y=self.Region.get_coords()
         Distance=np.sqrt((x[1]-x[0])**2+(y[1]-y[0])**2)
         Distance="{:.2f}".format(Distance/3.779528)
-        self.Calculation_label.setText("Distance\n"+str(Distance)+"mm")
+        self.Calculation_label.setText("Distance\n"+str(Distance)+"mm/pixel")
         print(Distance)
 
     # pick line when I select it 
