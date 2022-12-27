@@ -22,6 +22,7 @@ ui,_ = loadUiType(os.path.join(os.path.dirname(__file__),'dicom_viewer_ui.ui'))
 
 class Dicom_Viewer_App(QMainWindow , ui):
     def __init__(self , parent=None):
+        ''' variables initialization'''
         super(Dicom_Viewer_App , self).__init__(parent)
         QMainWindow.__init__(self)
         self.setupUi(self)
@@ -95,7 +96,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.axial_image=self.axial_axes.imshow(self.volume3d[:,:,self.z_global], cmap='gray')
         # _ = self.axial_fig.canvas.mpl_connect('button_press_event', self.onclick_axial)
 
-        #Adding Lines to axial plane
+        #Adding Lines to axial plane (vertical ,horizontal and diagonal)
         self.h_line_axial = lines.Line2D((0,512),(256,256),picker=5)
         self.v_line_axial = lines.Line2D((256,256),(0,512),picker=5)
         self.d_line = lines.Line2D((0,512),(0,512),picker=5)
@@ -105,7 +106,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.axial_axes.add_line(self.d_line)
 
         self.update(self.axial_fig)
-
+        # call clickonline function when a pick event happes in axial plane 
         _ = self.axial_fig.canvas.mpl_connect('pick_event', self.clickonline)
         
         #Sagital Canvas
@@ -114,14 +115,15 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.sagital_axes.imshow(rotated_sagital_matrix, cmap='gray')
 
 
-        #Adding Lines to sagital plane
+        #Adding Lines to sagital plane ( vertical and horizontal)
         self.h_line_sagital = lines.Line2D((0,512),(128,128),picker=5)
         self.v_line_sagital = lines.Line2D((256,256),(0,512),picker=5)
 
         self.sagital_axes.add_line(self.h_line_sagital) 
         self.sagital_axes.add_line(self.v_line_sagital)
         self.update(self.sagital_fig)
-
+        
+        # call clickonline function when a pick event happes in sagital plane 
         _ = self.sagital_fig.canvas.mpl_connect('pick_event', self.clickonline)
 
         #Coronal Canvas
@@ -138,12 +140,13 @@ class Dicom_Viewer_App(QMainWindow , ui):
             if isinstance(y, int) and (x,y) not in [0,512]:
                 self.x_coordinates_.append(x)
                 self.y_coordinates_.append(y)
+        # initialize oblique slice by the initial diagonal line        
         self.oblique_slice_initial=np.zeros((self.volume3d.shape[2],512))
         for i in range(self.volume3d.shape[2]):
             self.oblique_slice_initial[i,:]=self.volume3d[self.y_coordinates_,self.x_coordinates_,233-i]
         self.oblique_axes.imshow(self.oblique_slice_initial, cmap='gray')
 
-        #Adding Lines to coronal plane
+        #Adding Lines to coronal plane ( horizontal and vertical)
         self.h_line_coronal = lines.Line2D((0,512),(128,128),picker=5)
         self.v_line_coronal = lines.Line2D((256,256),(0,512),picker=5)
 
@@ -151,10 +154,12 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.coronal_axes.add_line(self.v_line_coronal)
 
         self.update(self.coronal_fig)
-
+        # call clickonline function when a pick event happes in coronal plane 
         _ = self.coronal_fig.canvas.mpl_connect('pick_event', self.clickonline)
 
+    
     def rotate_matrix(self,matrix):
+        ''' rotate the 2D plane '''
         return [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0])-1,-1,-1)]
     
 
@@ -249,14 +254,16 @@ class Dicom_Viewer_App(QMainWindow , ui):
         self.clicked_line = event.artist
         if event.artist == self.d_line:
             self.flag=0
+            # get the vertices of the diagonal line
             self.first_point=self.d_line.get_xdata()[0] , self.d_line.get_ydata()[0]
             self.second_point=self.d_line.get_xdata()[1] , self.d_line.get_ydata()[1]
             mouse_event=event.mouseevent
+            # get which point  on the diagonal line is clicked by a distance less than 50
             if dist((mouse_event.xdata,mouse_event.ydata),(self.first_point)) <50: 
                 self.flag=1
             elif dist((mouse_event.xdata,mouse_event.ydata),(self.second_point)) <50: 
                 self.flag=2
-
+        # check each event to connect it to its plane
         if self.clicked_line == self.v_line_sagital or self.clicked_line == self.h_line_sagital:
             self.follower_sagital = self.sagital_fig.canvas.mpl_connect("motion_notify_event", self.followmouse)
             self.releaser_sagital = self.sagital_fig.canvas.mpl_connect("button_press_event", self.releaseonclick)
@@ -270,7 +277,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
 
     # The selected line must follow the mouse
     def followmouse(self, event):
-        '''Update lines as mouse moves'''
+        '''Update lines and planes as mouse moves'''
         if event.ydata == None or event.xdata ==None:
             return        
         if self.clicked_line == self.h_line_axial:
@@ -326,100 +333,105 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.coronal_axes.imshow(rotated_coronal_matrix, cmap='gray')
             self.update(self.sagital_fig)
             self.update(self.coronal_fig)
-    
-        if self.clicked_line == self.d_line : 
-            if self.flag==1 and event.xdata != self.second_point[0] and event.ydata != self.second_point[1]:
-                slope = (self.second_point[1] - event.ydata )/(self.second_point[0]-event.xdata)                    
-                        
-            elif self.flag==2 and event.xdata != self.first_point[0] and event.ydata != self.first_point[1]:
-                slope = (self.first_point[1] - event.ydata )/(self.first_point[0]-event.xdata)
-                
-            elif self.flag==0:
-                slope = (self.d_line.get_ydata()[1] -self.d_line.get_ydata()[0] ) / (self.d_line.get_xdata()[1] -self.d_line.get_xdata()[0] )
-            y1=512 
-            x1=((y1 -(event.ydata))/slope) + (event.xdata)
-            if x1 <0 or x1> 512 :
-                x1=0
-                y1=(-1*slope*event.xdata) + (event.ydata)
-                if y1 <0 or y1> 512:
-                    y1=0
-                    x1= (-1 * (event.ydata)/slope) +(event.xdata)
-                    x2=512
-                    y2=(slope*(512-event.xdata))+ event.ydata
+        try:
+            if self.clicked_line == self.d_line : 
+                # check which point is selected or the whole diagonal line
+                # calculate the slope by having the two points
+                if self.flag==1 and event.xdata != self.second_point[0] and event.ydata != self.second_point[1]:
+                    slope = (self.second_point[1] - event.ydata )/(self.second_point[0]-event.xdata)                    
+                            
+                elif self.flag==2 and event.xdata != self.first_point[0] and event.ydata != self.first_point[1]:
+                    slope = (self.first_point[1] - event.ydata )/(self.first_point[0]-event.xdata)
+                    
+                elif self.flag==0:
+                    slope = (self.d_line.get_ydata()[1] -self.d_line.get_ydata()[0] ) / (self.d_line.get_xdata()[1] -self.d_line.get_xdata()[0] )
+            # intersect the new clicked line with each frame of the image to extend the line from 0 to 512 
+                y1=512 
+                x1=((y1 -(event.ydata))/slope) + (event.xdata)
+                if x1 <0 or x1> 512 :
+                    x1=0
+                    y1=(-1*slope*event.xdata) + (event.ydata)
+                    if y1 <0 or y1> 512:
+                        y1=0
+                        x1= (-1 * (event.ydata)/slope) +(event.xdata)
+                        x2=512
+                        y2=(slope*(512-event.xdata))+ event.ydata
+                    else:
+                        x2=512
+                        y2=(slope*(512-event.xdata))+ event.ydata
+                        if y2 <0 or y2> 512:
+                            y2=0
+                            x2= (-1 * (event.ydata)/slope) +(event.xdata)
                 else:
-                    x2=512
-                    y2=(slope*(512-event.xdata))+ event.ydata
+                    x2=0
+                    y2=(-1*slope*event.xdata) + (event.ydata)
                     if y2 <0 or y2> 512:
                         y2=0
                         x2= (-1 * (event.ydata)/slope) +(event.xdata)
-            else:
-                x2=0
-                y2=(-1*slope*event.xdata) + (event.ydata)
-                if y2 <0 or y2> 512:
-                    y2=0
-                    x2= (-1 * (event.ydata)/slope) +(event.xdata)
-                    if x2 <0 or x2> 512:
-                        x2=512
-                        y2=(slope*(512-event.xdata))+ event.ydata
-            self.x_coordinates=[]
-            self.y_coordinates=[]
-            x1=int(round(x1))
-            x2=int(round(x2))
-            y1=int(round(y1))
-            y2=int(round(y2))
-            c=y1-(slope*x1)
-            c=int(round(c))
-            if abs(x1-x2)>= abs(y1-y2):
-                if x1>x2:     
-                    self.d_line.set_xdata([x2, x1,])
-                    self.d_line.set_ydata([y2, y1])
-                    for x in range(x2, x1):
-                        y = slope*x + c
-                        y=int(y)
-                        if isinstance(y, int) and (x,y) not in [x2,x1]:
-                            self.x_coordinates.append(x)
-                            self.y_coordinates.append(y)
+                        if x2 <0 or x2> 512:
+                            x2=512
+                            y2=(slope*(512-event.xdata))+ event.ydata
+                # oblique slice calculations
+                self.x_coordinates=[]
+                self.y_coordinates=[]
+                x1=int(round(x1))
+                x2=int(round(x2))
+                y1=int(round(y1))
+                y2=int(round(y2))
+                #calculate c (intercepted part) from the equation of line
+                c=y1-(slope*x1)
+                c=int(round(c))
+                # check which difference is bigger to have the points along the line
+                if abs(x1-x2)>= abs(y1-y2):
+                    if x1>x2:     
+                        self.d_line.set_xdata([x2, x1,])
+                        self.d_line.set_ydata([y2, y1])
+                        # get ell the points that belong to this equation of line
+                        for x in range(x2, x1):
+                            y = slope*x + c
+                            y=int(y)
+                            if isinstance(y, int) and (x,y) not in [x2,x1]:
+                                self.x_coordinates.append(x)
+                                self.y_coordinates.append(y)
+                    elif x1<x2:
+                        self.d_line.set_xdata([x1, x2])
+                        self.d_line.set_ydata([y1, y2])
+                        for x in range(x1, x2):
+                            y = slope*x + c
+                            y=int(y)
+                            if isinstance(y, int) and (x,y) not in [x1,x2]:
+                                self.x_coordinates.append(x)
+                                self.y_coordinates.append(y)
+                else:
+                    if y1>y2:     
+                        self.d_line.set_xdata([x2, x1,])
+                        self.d_line.set_ydata([y2, y1])
+                        for y in range(y2, y1):
+                            x = (y - c)/slope
+                            x=int(x)
+                            if isinstance(x, int) and (x,y) not in [y2,y1]:
+                                self.x_coordinates.append(x)
+                                self.y_coordinates.append(y)
 
 
-                elif x1<x2:
-                    self.d_line.set_xdata([x1, x2])
-                    self.d_line.set_ydata([y1, y2])
-                    for x in range(x1, x2):
-                        y = slope*x + c
-                        y=int(y)
-                        if isinstance(y, int) and (x,y) not in [x1,x2]:
-                            self.x_coordinates.append(x)
-                            self.y_coordinates.append(y)
-            else:
-                if y1>y2:     
-                    self.d_line.set_xdata([x2, x1,])
-                    self.d_line.set_ydata([y2, y1])
-                    for y in range(y2, y1):
-                        x = (y - c)/slope
-                        x=int(x)
-                        if isinstance(x, int) and (x,y) not in [y2,y1]:
-                            self.x_coordinates.append(x)
-                            self.y_coordinates.append(y)
-
-
-                elif y2>y1:     
-                    self.d_line.set_xdata([x1, x2,])
-                    self.d_line.set_ydata([y1, y2])
-                    for y in range(y1, y2):
-                        x = (y - c)/slope
-                        x=int(x)
-                        if isinstance(x, int) and (x,y) not in [y1,y2]:
-                            self.x_coordinates.append(x)
-                            self.y_coordinates.append(y)
-        self.oblique_slice=np.zeros((self.volume3d.shape[2],len(self.x_coordinates)))
-        for i in range(self.volume3d.shape[2]):
-            self.oblique_slice[i,:]=self.volume3d[self.y_coordinates,self.x_coordinates,233-i]
-        # rotated_oblique_matrix = self.rotate_matrix(oblique_slice)
-        # rotated_oblique_matrix = self.rotate_matrix(rotated_oblique_matrix)
-        self.oblique_axes.imshow(self.oblique_slice, cmap='gray')
-        self.update(self.oblique_fig)            
-        self.update(self.axial_fig)
-            
+                    elif y2>y1:     
+                        self.d_line.set_xdata([x1, x2,])
+                        self.d_line.set_ydata([y1, y2])
+                        for y in range(y1, y2):
+                            x = (y - c)/slope
+                            x=int(x)
+                            if isinstance(x, int) and (x,y) not in [y1,y2]:
+                                self.x_coordinates.append(x)
+                                self.y_coordinates.append(y)
+            self.oblique_slice=np.zeros((self.volume3d.shape[2],len(self.x_coordinates)))
+            # loop over each slice of z with the same points of x and y
+            for i in range(self.volume3d.shape[2]):
+                self.oblique_slice[i,:]=self.volume3d[self.y_coordinates,self.x_coordinates,233-i]
+            self.oblique_axes.imshow(self.oblique_slice, cmap='gray')
+            self.update(self.oblique_fig)            
+            self.update(self.axial_fig)
+        except:
+            return    
 
 
         
@@ -544,22 +556,7 @@ class Dicom_Viewer_App(QMainWindow , ui):
             self.sagital_fig.canvas.mpl_disconnect(self.releaser_sagital)
             self.sagital_fig.canvas.mpl_disconnect(self.follower_sagital)
         except:
-            return
-    # def onclick_axial(self,event):
-    #     self.axial_x, self.axial_y = round(event.xdata), round(event.ydata)
-    #     line = self.axial_axes.axvline(x=self.axial_x, visible=True)
-    #     self.axial_fig.canvas.draw()
-    #     line.remove()
-
-    #     #Update Sagital
-    #     self.sagital_axes.imshow(self.volume3d[:,self.axial_x,:], cmap='gray')
-    #     self.sagital_fig.canvas.draw()
-
-    #     #Update Coronal
-    #     self.coronal_axes.imshow(self.volume3d[self.axial_x,:,:], cmap='gray')
-    #     self.coronal_fig.canvas.draw()
-
-    
+            return    
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = Dicom_Viewer_App()
